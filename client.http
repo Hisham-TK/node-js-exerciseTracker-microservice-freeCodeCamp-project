@@ -1,0 +1,23 @@
+POST http://localhost:3000/api/users HTTP/1.1
+Content-Type: application/json
+
+{"username": "hisham"}
+
+###
+GET http://localhost:3000/api/users HTTP/1.1
+
+###
+POST http://localhost:3000/api/users/63d986790807bf542cb7e429/exercises HTTP/1.1
+Content-Type: application/json
+
+# { "description": "test", "duration": "60" }
+{ "description": "test", "duration": "60", "date": "1990-01-05" }
+
+###
+GET http://localhost:3000/api/users/63d984c0199396c41e54133e/logs?from=1990-01-05 HTTP/1.1
+Content-Type: application/json
+
+
+### 
+GET https://exercise-tracker.freecodecamp.rocks/api/users/6120610cf5860e05a3652f1d/logs HTTP/1.1
+Content-Type: application/json

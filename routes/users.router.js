@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const Users = require('../models/Users.model');
+const Exercises = require('../models/Exercises.model');
 
 const usersRouter = express.Router();
 
@@ -18,11 +19,28 @@ usersRouter
     res.json(allUsers);
   });
 
-// Find user, and him all exercises
-usersRouter.get('/:userId', async (req, res) => {
+// Create a new exercises
+usersRouter.post('/:userId/exercises', async (req, res) => {
   const { userId } = req.params;
-  const user = await Users.findById(userId);
-  res.json(user);
+  const { date, description, duration } = req.body;
+
+  const foundUser = await Users.findById(userId);
+  if (!foundUser) return res.status(400).json({ error: "Can't found a user with id:" + userId });
+
+  const createdExercise = await Exercises.create({
+    username: userId,
+    description,
+    duration,
+    date: date || new Date(),
+  });
+
+  return res.json({
+    _id: foundUser._id,
+    username: foundUser.username,
+    description: createdExercise.description,
+    duration: createdExercise.duration,
+    date: createdExercise.date,
+  });
 });
 
 // Find all user logs
@@ -31,32 +49,21 @@ usersRouter.get('/:userId/logs', async (req, res) => {
   const { from, to, limit } = req.query;
 
   const foundUser = await Users.findById(userId);
-  res.json(foundUser);
-});
-
-// Create a new exercises
-usersRouter.post('/:userId/exercises', async (req, res) => {
-  const { userId } = req.params;
-  const foundUser = await Users.findById(userId);
-  const { date, description, duration } = req.body;
-
   if (!foundUser) return res.status(400).json({ error: "Can't found a user with id:" + userId });
 
-  foundUser.count += 1;
-  foundUser.log.push({
-    description,
-    duration: +duration,
-    date: date ? new Date(date).toDateString() : new Date().toDateString(),
-  });
-  const userWithExercises = await foundUser.save();
-  const createdExercise = userWithExercises.log[userWithExercises.log.length - 1].toJSON();
+  // Find query
+  const query = { username: foundUser._id };
+  if (from && to) query.date = { $gte: from, $lte: to };
+  else if (from) query.date = { $gte: from };
+  else if (to) query.date = { $lte: to };
+
+  const userExercisesLog = await Exercises.find(query, '-_id -username -__v', { limit });
 
   res.json({
-    _id: userWithExercises._id,
-    username: userWithExercises.username,
-    description: createdExercise.description,
-    duration: createdExercise.duration,
-    date: createdExercise.date,
+    _id: foundUser._id,
+    username: foundUser.username,
+    log: userExercisesLog,
+    count: userExercisesLog.length,
   });
 });
 

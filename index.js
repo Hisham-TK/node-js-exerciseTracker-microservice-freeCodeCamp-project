@@ -30,7 +30,7 @@ app.use('/api/users/', require('./routes/users.router'));
 function main() {
   // Connect to mongoose
   mongoose.set('strictQuery', false);
-  mongoose.connect('mongodb://127.0.0.1:27017/exerciseTracker_freeCodeCamp', (err) => {
+  mongoose.connect(process.env.MONGO_URI, (err) => {
     if (err) console.error(err);
     console.log('connected successfully to MongoDB');
   });
